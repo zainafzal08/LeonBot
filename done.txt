@@ -1,8 +1,0 @@
-Ring of Rings
-This ring when used creates a copy of the ring on the finger it's on.
-The old ring is destroyed.
-
-Richard's Hand-Glock
-This gun when fired causes mass hysteria.
-Everyone within 30ft must make a Wisdom saving throw or be disgusted and paralysed for 1 round.
-

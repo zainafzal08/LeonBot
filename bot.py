@@ -79,9 +79,13 @@ def tokenSummary():
     response = []
     response.append("```")
     for player in players:
+        if player  == "":
+            continue
         response.append("%-15s | %s"%(player.split(",")[0],player.split(",")[1]))
     response.append("```")
-
+    if len(response) < 3:
+        response = []
+        response.append("I don't know any players! say `leon bot say hello to <player>` to introduce me")
     return "\n".join(response)
 
 def writeAllItems(allItems):

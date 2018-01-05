@@ -198,3 +198,7 @@ Once a day, a user can tap the fork on anything upto 5 cubic feat.
 They can then use the fork to eat the material, without becoming full or suffering any ill effects from it.
 It takes 10 minutes to eat all the material in a 5ft cube.
 1 hour after use, the user will shit themselves unless they can find a bathroom within 1 minute.
+
+Robotic Guinea Pig
+This Guinea Pig is made from nanites.
+The nature of the nanites means they can perfectly replicate how a Guinea Pig sounds and functions.

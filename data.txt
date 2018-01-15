@@ -203,3 +203,8 @@ Mystery Ammunition
 This ammunition counts as +1. The bag contains 20 rounds.
 When it hits its target, the DM rolls on the wild magic table. The effect happens to the target.
 
+True Sight Gum
+This packet of gum has 6 sticks in it.
+The gum loses its flavour after 5 minutes. Once the last stick of gum is eaten, roll a d10. This roll can be repeated once a day.
+On a 1, the packet disintegrates and becomes Peepum's Nasty Gum.
+On a 10, the packet regains 3 sticks of gum.

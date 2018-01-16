@@ -36,10 +36,10 @@ def postItem():
     description = item[1]
     items = []
     items.append("```")
-    items.append(">> "+hide(name))
+    items.append(">> "+name)
     items.append("="*(5+len(name)))
     items.append("\n")
-    items.append(hide(description))
+    items.append(description)
     items.append("```")
     return "\n".join(items)
 

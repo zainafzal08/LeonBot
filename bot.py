@@ -2,8 +2,17 @@ import discord
 import asyncio
 import re
 import random
+from Db import Db
+import os
+
+# Globals
+db = Db()
+client = discord.Client()
 
 # Helper
+def hide(t):
+    return "A"*len(t)
+
 def extractQuestion(t):
     m = t.lower()
     m = re.sub(r'\s+',' ',m)
@@ -12,106 +21,58 @@ def extractQuestion(t):
     return m
 
 def getAllItems():
-    f = open("data.txt","r")
-    text = f.read().strip()
-    f.close()
-    rawItems = text.split("\n\n")
-    result = []
-    for item in rawItems:
-        result.append((item.split("\n")[0],"\n".join(item.split("\n")[1:])))
+    result = db.allItems()
     return result
 
 def registerPlayer(name):
-    f = open("players.txt","a")
-    f.write(name+",0\n")
-    f.close()
+    db.newPlayer(name)
 
 def postItem():
     allItems = getAllItems()
     i = random.randint(0,len(allItems)-1)
     item = allItems[i]
-    del allItems[i]
-    writeAllItems(allItems)
-    writeDoneItem(item)
+    db.removeItem(item[0])
     name = item[0]
     description = item[1]
     items = []
     items.append("```")
-    items.append(">> "+name)
+    items.append(">> "+hide(name))
     items.append("="*(5+len(name)))
     items.append("\n")
-    items.append(description)
+    items.append(hide(description))
     items.append("```")
     return "\n".join(items)
 
-def playerTokens(name):
-    f = open("players.txt","r")
-    raw = f.read().strip()
-    f.close()
-    players = raw.split("\n")
-    for player in players:
-        if player.split(",")[0] == name:
-            return int(player.split(",")[1])
-    return -1
-
 def subtractToken(name):
-    f = open("players.txt","r")
-    raw = f.read().strip()
-    f.close()
-    players = raw.split("\n")
-    new = []
-    for player in players:
-        if player.split(",")[0] == name:
-            new.append((player.split(",")[0],str(int(player.split(",")[1])-1)))
-        else:
-            new.append((player.split(",")[0],str(int(player.split(",")[1]))))
-
-    f = open("players.txt","w")
-    for player in new:
-        f.write(player[0]+","+player[1]+"\n")
-    f.close()
+    db.editTokens(name, -1)
 
 def tokenSummary():
-    f = open("players.txt","r")
-    raw = f.read().strip()
-    f.close()
-    players = raw.split("\n")
+    players = db.allPlayers()
     response = []
     response.append("```")
     for player in players:
         if player  == "":
             continue
-        response.append("%-15s | %s"%(player.split(",")[0],player.split(",")[1]))
+        response.append("%-15s | %s"%(player[0],player[1]))
     response.append("```")
     if len(response) < 3:
         response = []
         response.append("I don't know any players! say `leon bot say hello to <player>` to introduce me")
     return "\n".join(response)
 
-def writeAllItems(allItems):
-    f = open("data.txt","w")
-    for item in allItems:
-        f.write(item[0]+"\n")
-        f.write(item[1]+"\n\n")
-    f.close()
-
-
-def writeDoneItem(item):
-    f = open("done.txt","a")
-    f.write(item[0]+"\n")
-    f.write(item[1]+"\n\n")
-    f.close()
-
 # Trigger Functions
 
 async def newPlayer(message, trigger):
     name = re.search(r'say hello to (\w+)',trigger).group(1)
-    registerPlayer(name)
-    await client.send_message(message.channel, "Hello "+name+"!")
+    res = registerPlayer(name)
+    if res == -1:
+        await client.send_message(message.channel, "I already know a "+name+"!")
+    else:
+        await client.send_message(message.channel, "Hello "+name+"!")
 
 async def takeTokens(message, trigger):
     name = re.search(r'give (\w+) an item',trigger).group(1)
-    tokens = playerTokens(name)
+    tokens = db.playerTokens(name)
     if tokens > 0:
         subtractToken(name)
         await client.send_message(message.channel, postItem())
@@ -121,40 +82,17 @@ async def takeTokens(message, trigger):
         await client.send_message(message.channel, "I don't know who that is")
 
 async def giveTokens(message, trigger):
-    f = open("players.txt","r")
-    raw = f.read().strip()
-    f.close()
-    players = raw.split("\n")
-    new = []
+    players = db.allPlayers()
     for player in players:
-        new.append((player.split(",")[0],str(int(player.split(",")[1])+1)))
-
-    f = open("players.txt","w")
-    for player in new:
-        f.write(player[0]+","+player[1]+"\n")
-    f.close()
-    await client.send_message(message.channel, "Done!")
-
-async def giveTokens(message, trigger):
-    f = open("players.txt","r")
-    raw = f.read().strip()
-    f.close()
-    players = raw.split("\n")
-    new = []
-    for player in players:
-        new.append((player.split(",")[0],str(int(player.split(",")[1])+1)))
-
-    f = open("players.txt","w")
-    for player in new:
-        f.write(player[0]+","+player[1]+"\n")
-    f.close()
+        db.editTokens(player[0],1)
     await client.send_message(message.channel, "Done!")
 
 async def showTokens(message, trigger):
     s = tokenSummary()
     await client.send_message(message.channel, s)
 
-# Globals
+
+# triggers
 triggers = [
     ("leon bot tokens for all", giveTokens),
     ("leonbot tokens for all", giveTokens),
@@ -169,7 +107,6 @@ triggers = [
     ("leonbot how many tokens does everyone have", showTokens),
     ("leon-bot how many tokens does everyone have", showTokens)
 ]
-client = discord.Client()
 
 # Discord event handllers
 @client.event
@@ -185,11 +122,10 @@ async def on_message(message):
     # ignore bots
     if (message.author.bot):
         return
-
     m = extractQuestion(message.content)
     for trigger in triggers:
         if re.search(trigger[0], m) and re.search(trigger[0], m).group(0):
             await trigger[1](message,m)
 
-client.run("Mzk4MDQwMzg3NTc2Mzk3ODQ1.DS4vkg.7ul--xPSOiEiFXFcAXHsNyOlxe8")
+client.run(os.environ.get('BOT_TOKEN'))
 client.close()

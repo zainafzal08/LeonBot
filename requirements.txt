@@ -12,6 +12,6 @@ PyJWT==1.5.2
 requests==2.20.0
 tqdm==4.19.5
 urllib3==1.24.2
-websockets==3.4
+websockets==9.1
 Werkzeug==0.15.3
 psycopg2==2.7.3.2
